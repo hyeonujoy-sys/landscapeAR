@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>등고선 3D 지형 탐험기</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif; background:#060f1e; color:#fff; overflow:hidden; height:100dvh; display:flex; flex-direction:column; }
+
+/* ── 헤더 ── */
+#header {
+  background:linear-gradient(135deg,#1a3a5c,#0d2137);
+  padding:10px 16px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:2px solid #2a7fff;
+  flex-shrink:0; z-index:100;
+}
+#header-left h1 { font-size:1.1rem; font-weight:800; color:#5ab4ff; }
+#header-left p { font-size:0.72rem; color:#8bb8d4; margin-top:2px; }
+.btn-help {
+  background:rgba(42,127,255,0.2); color:#5ab4ff;
+  border:1px solid rgba(42,127,255,0.4); border-radius:20px;
+  padding:7px 14px; font-size:0.8rem; cursor:pointer;
+  white-space:nowrap;
+}
+
+/* ── 단계 표시바 ── */
+#step-bar {
+  display:flex; align-items:center; justify-content:center;
+  gap:6px; padding:8px 16px;
+  background:rgba(0,0,0,0.35); border-bottom:1px solid rgba(42,127,255,0.15);
+  flex-shrink:0;
+}
+.step-pill {
+  display:flex; align-items:center; gap:5px;
+  padding:5px 12px; border-radius:20px; border:none;
+  font-size:0.8rem; font-weight:700; cursor:pointer; transition:all 0.3s;
+}
+.step-pill.active { background:#2a7fff; color:#fff; box-shadow:0 0 12px rgba(42,127,255,0.5); }
+.step-pill.done { background:rgba(90,180,255,0.25); color:#5ab4ff; }
+.step-pill.inactive { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.3); cursor:default; }
+.step-arrow { color:rgba(42,127,255,0.35); font-size:1rem; }
+
+/* ── 메인 ── */
+#main { flex:1; position:relative; overflow:hidden; }
+.screen { position:absolute; inset:0; display:none; flex-direction:column; }
+.screen.active { display:flex; }
+
+/* ── 시작 화면 ── */
+#screen-start {
+  background:linear-gradient(160deg,#060f1e,#0d2137);
+  align-items:center; justify-content:center; gap:18px; padding:24px;
+}
+.start-icon { font-size:5rem; animation:float 3s ease-in-out infinite; }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+.start-title { font-size:1.9rem; font-weight:900; color:#5ab4ff; text-align:center; line-height:1.3; }
+.start-sub { font-size:0.95rem; color:#8bb8d4; text-align:center; line-height:1.7; }
+.btn-primary {
+  background:linear-gradient(135deg,#2a7fff,#1a5fcc);
+  color:#fff; border:none; border-radius:50px;
+  padding:15px 40px; font-size:1.05rem; font-weight:700;
+  cursor:pointer; box-shadow:0 4px 20px rgba(42,127,255,0.45);
+  transition:all 0.2s;
+}
+.btn-primary:active { transform:scale(0.96); }
+.start-note { font-size:0.72rem; color:#3a6080; }
+
+/* ── 안내 화면 ── */
+#screen-guide {
+  background:linear-gradient(160deg,#0a1628,#0d2137);
+  overflow-y:auto;
+}
+.guide-inner { padding:16px; display:flex; flex-direction:column; gap:12px; }
+.guide-title { font-size:1.05rem; font-weight:800; color:#5ab4ff; text-align:center; padding:4px 0; }
+.guide-step {
+  background:rgba(42,127,255,0.08); border:1px solid rgba(42,127,255,0.2);
+  border-radius:14px; padding:14px; display:flex; align-items:flex-start; gap:12px;
+}
+.guide-step .num {
+  width:34px; height:34px; border-radius:50%; background:#2a7fff;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:800; font-size:1rem; flex-shrink:0;
+}
+.guide-step .text h3 { font-size:0.95rem; font-weight:700; margin-bottom:4px; }
+.guide-step .text p { font-size:0.82rem; color:#8bb8d4; line-height:1.55; }
+.guide-svg-wrap {
+  background:rgba(255,255,255,0.04); border-radius:12px;
+  padding:14px; text-align:center; border:1px dashed rgba(42,127,255,0.25);
+}
+.guide-svg-wrap p { font-size:0.78rem; color:#6090b0; margin-top:8px; }
+.guide-footer { padding:12px 16px; background:rgba(0,0,0,0.3); border-top:1px solid rgba(42,127,255,0.15); flex-shrink:0; }
+
+/* ── 카메라 화면 ── */
+#screen-camera { background:#000; position:relative; }
+#video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+#canvas-overlay { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+
+.scan-frame {
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-56%);
+  width:82%; max-width:460px; aspect-ratio:4/3;
+  border:2.5px solid rgba(90,180,255,0.85);
+  border-radius:12px;
+  box-shadow:0 0 0 9999px rgba(0,0,0,0.42);
+  pointer-events:none;
+  animation:scanPulse 2s ease-in-out infinite;
+}
+@keyframes scanPulse { 0%,100%{border-color:rgba(90,180,255,0.85)} 50%{border-color:rgba(90,180,255,0.3)} }
+.scan-corner { position:absolute; width:22px; height:22px; border-color:#5ab4ff; border-style:solid; }
+.scan-corner.tl { top:-3px; left:-3px; border-width:3px 0 0 3px; border-radius:4px 0 0 0; }
+.scan-corner.tr { top:-3px; right:-3px; border-width:3px 3px 0 0; border-radius:0 4px 0 0; }
+.scan-corner.bl { bottom:-3px; left:-3px; border-width:0 0 3px 3px; border-radius:0 0 0 4px; }
+.scan-corner.br { bottom:-3px; right:-3px; border-width:0 3px 3px 0; border-radius:0 0 4px 0; }
+.scan-line {
+  position:absolute; left:0; right:0; height:2px;
+  background:linear-gradient(90deg,transparent,#5ab4ff 30%,#fff 50%,#5ab4ff 70%,transparent);
+  animation:scanMove 2.5s linear infinite; opacity:0.8;
+}
+@keyframes scanMove { 0%{top:0%} 100%{top:100%} }
+
+.camera-ui {
+  position:absolute; bottom:0; left:0; right:0;
+  padding:14px 16px 20px;
+  background:linear-gradient(transparent,rgba(0,0,0,0.88));
+  display:flex; flex-direction:column; align-items:center; gap:10px;
+  z-index:10;
+}
+.camera-hint {
+  background:rgba(42,127,255,0.75); border-radius:20px;
+  padding:6px 16px; font-size:0.82rem; font-weight:600;
+}
+.camera-buttons { display:flex; gap:14px; align-items:center; }
+.btn-capture {
+  width:68px; height:68px; border-radius:50%;
+  background:#fff; border:4px solid #5ab4ff;
+  cursor:pointer; transition:all 0.15s;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.4rem; box-shadow:0 0 22px rgba(90,180,255,0.55);
+}
+.btn-capture:active { transform:scale(0.9); background:#c0e0ff; }
+.btn-secondary {
+  background:rgba(255,255,255,0.15); color:#fff;
+  border:1px solid rgba(255,255,255,0.25); border-radius:24px;
+  padding:10px 18px; font-size:0.88rem; cursor:pointer; transition:all 0.2s;
+}
+.btn-secondary:active { background:rgba(255,255,255,0.28); }
+
+/* 처리 오버레이 */
+#processing-overlay {
+  display:none; position:absolute; inset:0;
+  background:rgba(6,15,30,0.93); z-index:50;
+  align-items:center; justify-content:center; flex-direction:column; gap:14px;
+}
+#processing-overlay.show { display:flex; }
+.spinner {
+  width:58px; height:58px; border-radius:50%;
+  border:5px solid rgba(42,127,255,0.2); border-top-color:#2a7fff;
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
+.proc-msg { font-size:1rem; color:#5ab4ff; font-weight:700; }
+.proc-sub { font-size:0.8rem; color:#6090b0; }
+
+/* ── 결과 3D 화면 ── */
+#screen-result { background:#060f1e; }
+#three-canvas { flex:1; width:100%; display:block; }
+.result-bottom {
+  padding:10px 14px 14px;
+  background:rgba(0,0,0,0.55);
+  display:flex; gap:8px; align-items:center;
+  flex-shrink:0; border-top:1px solid rgba(42,127,255,0.25);
+  flex-wrap:wrap;
+}
+.result-info { flex:1; min-width:130px; }
+.result-info h3 { font-size:0.88rem; font-weight:700; color:#5ab4ff; }
+.result-info p { font-size:0.72rem; color:#6090b0; margin-top:2px; }
+.btn-sm {
+  background:rgba(42,127,255,0.18); color:#5ab4ff;
+  border:1px solid rgba(42,127,255,0.35); border-radius:20px;
+  padding:7px 14px; font-size:0.78rem; cursor:pointer; transition:all 0.2s;
+  white-space:nowrap;
+}
+.btn-sm:active { background:rgba(42,127,255,0.35); }
+.btn-sm.accent { background:#2a7fff; color:#fff; border-color:#2a7fff; }
+
+/* ── 도움말 오버레이 ── */
+#help-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.75); z-index:300;
+  align-items:center; justify-content:center; padding:20px;
+}
+#help-overlay.show { display:flex; }
+.help-box {
+  background:#0d2137; border:1.5px solid #2a7fff;
+  border-radius:18px; padding:22px; max-width:400px; width:100%;
+}
+.help-box h2 { color:#5ab4ff; margin-bottom:14px; font-size:1.1rem; }
+.help-list { list-style:none; display:flex; flex-direction:column; gap:10px; }
+.help-list li { font-size:0.88rem; color:#b0d0e8; display:flex; gap:10px; line-height:1.5; }
+.help-close { margin-top:18px; width:100%; }
+
+/* 에러 토스트 */
+#toast {
+  display:none; position:fixed; bottom:100px; left:50%;
+  transform:translateX(-50%); z-index:400;
+  background:#c0392b; color:#fff;
+  padding:10px 22px; border-radius:12px;
+  font-size:0.88rem; font-weight:600;
+  box-shadow:0 4px 14px rgba(0,0,0,0.4);
+  max-width:90%; text-align:center;
+}
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<div id="header">
+  <div id="header-left">
+    <h1>🗻 등고선 3D 지형 탐험기</h1>
+    <p>등고선을 찍으면 3D 산이 만들어져요!</p>
+  </div>
+  <button class="btn-help" onclick="toggleHelp()">❓ 도움말</button>
+</div>
+
+<!-- 단계 표시바 -->
+<div id="step-bar">
+  <button class="step-pill active" id="pill-1" onclick="navStep(1)">① 안내</button>
+  <span class="step-arrow">›</span>
+  <button class="step-pill inactive" id="pill-2">② 카메라</button>
+  <span class="step-arrow">›</span>
+  <button class="step-pill inactive" id="pill-3">③ 3D 지형</button>
+</div>
+
+<!-- 메인 -->
+<div id="main">
+
+  <!-- 시작 화면 -->
+  <div id="screen-start" class="screen active">
+    <div class="start-icon">🗺️</div>
+    <div class="start-title">등고선을 3D로<br>바꿔보자!</div>
+    <div class="start-sub">
+      종이에 그린 등고선을<br>카메라로 찍으면<br>
+      <strong style="color:#5ab4ff">멋진 3D 산</strong>이 나타나요! 🏔️
+    </div>
+    <button class="btn-primary" onclick="goTo('guide')">🚀 시작하기</button>
+    <div class="start-note">카메라 사용 허용이 필요해요</div>
+  </div>
+
+  <!-- 안내 화면 -->
+  <div id="screen-guide" class="screen">
+    <div class="guide-inner">
+      <div class="guide-title">📖 이렇게 하면 돼요!</div>
+
+      <div class="guide-step">
+        <div class="num">1</div>
+        <div class="text">
+          <h3>흰 종이에 등고선을 그려요 ✏️</h3>
+          <p>검은 펜으로 동그란 선을 여러 개 겹쳐서 그려요.<br>안쪽 선일수록 더 높은 곳이에요. 섬이나 산 모양으로 그려보세요!</p>
+        </div>
+      </div>
+
+      <div class="guide-svg-wrap">
+        <svg width="210" height="130" viewBox="0 0 210 130">
+          <rect width="210" height="130" fill="#f5f0e0" rx="10"/>
+          <ellipse cx="105" cy="65" rx="88" ry="52" fill="none" stroke="#222" stroke-width="2.5"/>
+          <ellipse cx="105" cy="65" rx="66" ry="38" fill="none" stroke="#222" stroke-width="2.5"/>
+          <ellipse cx="105" cy="65" rx="45" ry="26" fill="none" stroke="#222" stroke-width="2.5"/>
+          <ellipse cx="105" cy="65" rx="26" ry="15" fill="none" stroke="#222" stroke-width="2.5"/>
+          <ellipse cx="105" cy="65" rx="10" ry="6" fill="#222"/>
+          <text x="105" y="120" text-anchor="middle" font-size="10" fill="#666">← 이렇게 그리면 돼요 →</text>
+        </svg>
+        <p>가운데(꼭대기)▲ → 바깥쪽(기슭)▽&nbsp;&nbsp;|&nbsp;&nbsp;선이 촘촘할수록 경사가 급해요!</p>
+      </div>
+
+      <div class="guide-step">
+        <div class="num">2</div>
+        <div class="text">
+          <h3>카메라로 종이를 찍어요 📷</h3>
+          <p>밝은 곳에서 파란 테두리 안에 종이가 꽉 들어오게 해요.<br>탁자 위에 올려두고 찍으면 흔들리지 않아서 더 잘 돼요!</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="num">3</div>
+        <div class="text">
+          <h3>3D 지형이 짠! 나타나요 🏔️</h3>
+          <p>손가락으로 돌리고, 두 손가락으로 확대·축소해 보세요.<br>다양한 등고선으로 여러 지형을 만들어봐요!</p>
+        </div>
+      </div>
+    </div>
+    <div class="guide-footer">
+      <button class="btn-primary" style="width:100%;padding:14px" onclick="startCamera()">
+        📷 카메라 켜기
+      </button>
+    </div>
+  </div>
+
+  <!-- 카메라 화면 -->
+  <div id="screen-camera" class="screen">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="canvas-overlay"></canvas>
+    <div class="scan-frame">
+      <div class="scan-corner tl"></div>
+      <div class="scan-corner tr"></div>
+      <div class="scan-corner bl"></div>
+      <div class="scan-corner br"></div>
+      <div class="scan-line"></div>
+    </div>
+    <div class="camera-ui">
+      <div class="camera-hint">📋 종이를 파란 테두리 안에 꽉 맞춰요!</div>
+      <div class="camera-buttons">
+        <button class="btn-secondary" onclick="switchCam()">🔄 카메라 전환</button>
+        <button class="btn-capture" onclick="capturePhoto()" title="촬영">📸</button>
+        <button class="btn-secondary" onclick="openGallery()">🖼️ 사진 선택</button>
+      </div>
+    </div>
+    <div id="processing-overlay">
+      <div class="spinner"></div>
+      <div class="proc-msg">등고선 분석 중... 🔍</div>
+      <div class="proc-sub">잠깐만 기다려요!</div>
+    </div>
+  </div>
+
+  <!-- 3D 결과 화면 -->
+  <div id="screen-result" class="screen">
+    <canvas id="three-canvas"></canvas>
+    <div class="result-bottom">
+      <div class="result-info">
+        <h3>🏔️ 내 3D 지형 완성!</h3>
+        <p>손가락으로 돌려보세요 🖐️</p>
+      </div>
+      <button class="btn-sm" onclick="toggleWireframe()">🔲 격자</button>
+      <button class="btn-sm" onclick="resetCameraView()">🔄 초기화</button>
+      <button class="btn-sm accent" onclick="startCamera()">📷 다시 찍기</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- 숨겨진 파일 입력 -->
+<input type="file" id="file-input" accept="image/*" capture="environment" style="display:none" onchange="handleFile(event)">
+
+<!-- 도움말 -->
+<div id="help-overlay">
+  <div class="help-box">
+    <h2>🆘 도움말</h2>
+    <ul class="help-list">
+      <li>✏️ <span>흰 종이에 <strong>검은 펜</strong>으로 굵게 그려요</span></li>
+      <li>💡 <span>밝은 곳에서 찍을수록 더 잘 돼요</span></li>
+      <li>📐 <span>종이가 파란 테두리 안에 꽉 차게 해요</span></li>
+      <li>🖐️ <span>3D 화면에서 손가락 하나로 돌릴 수 있어요</span></li>
+      <li>🔍 <span>두 손가락을 벌리면 확대, 오므리면 축소</span></li>
+      <li>📷 <span>카메라가 안 되면 '사진 선택'으로 갤러리에서 골라요</span></li>
+      <li>🎨 <span>등고선이 많을수록 더 입체적인 산이 돼요!</span></li>
+    </ul>
+    <button class="btn-primary help-close" onclick="toggleHelp()">✅ 확인</button>
+  </div>
+</div>
+
+<!-- 에러 토스트 -->
+<div id="toast"></div>
+
+<!-- Three.js -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+<script>
+// ══════════════════════════════════════════
+//  상태
+// ══════════════════════════════════════════
+let currentScreen = 'start';
+let videoStream = null;
+let facingMode = 'environment';
+let wireframeOn = false;
+let renderer3d, scene3d, camera3d, terrainMesh, waterMesh, animId;
+
+// ══════════════════════════════════════════
+//  화면 전환
+// ══════════════════════════════════════════
+function goTo(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  currentScreen = name;
+  updatePills(name);
+}
+
+function navStep(n) {
+  if (n === 1) goTo('guide');
+}
+
+function updatePills(name) {
+  const order = { start:0, guide:1, camera:2, result:3 };
+  const cur = order[name] || 0;
+  [1,2,3].forEach(i => {
+    const p = document.getElementById('pill-' + i);
+    if (!p) return;
+    p.classList.remove('active','done','inactive');
+    if (i < cur) p.classList.add('done');
+    else if (i === cur) p.classList.add('active');
+    else p.classList.add('inactive');
+  });
+}
+
+function toggleHelp() {
+  document.getElementById('help-overlay').classList.toggle('show');
+}
+
+// ══════════════════════════════════════════
+//  카메라
+// ══════════════════════════════════════════
+async function startCamera() {
+  goTo('camera');
+  if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
+  try {
+    videoStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: facingMode }, width:{ideal:1920}, height:{ideal:1080} },
+      audio: false
+    });
+    document.getElementById('video').srcObject = videoStream;
+  } catch (e) {
+    showToast('📷 카메라를 켤 수 없어요. 권한을 허용하거나 "사진 선택"을 이용해 주세요!');
+  }
+}
+
+async function switchCam() {
+  facingMode = facingMode === 'environment' ? 'user' : 'environment';
+  await startCamera();
+}
+
+function openGallery() {
+  document.getElementById('file-input').click();
+}
+
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => runProcessing(ev.target.result);
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function capturePhoto() {
+  const video = document.getElementById('video');
+  if (!video.srcObject || !video.videoWidth) {
+    showToast('카메라가 준비되지 않았어요!'); return;
+  }
+  const c = document.createElement('canvas');
+  c.width = video.videoWidth; c.height = video.videoHeight;
+  c.getContext('2d').drawImage(video, 0, 0);
+  runProcessing(c.toDataURL('image/jpeg', 0.95));
+}
+
+// ══════════════════════════════════════════
+//  이미지 처리 파이프라인
+// ══════════════════════════════════════════
+function runProcessing(dataUrl) {
+  showProcessing(true);
+  setTimeout(() => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const hmap = extractHeightmap(img);
+        if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
+        showProcessing(false);
+        goTo('result');
+        setTimeout(() => buildTerrain(hmap), 80);
+      } catch (err) {
+        showProcessing(false);
+        showToast('이미지 처리에 실패했어요 😢 밝은 곳에서 다시 찍어보세요!');
+      }
+    };
+    img.onerror = () => { showProcessing(false); showToast('이미지를 불러올 수 없어요.'); };
+    img.src = dataUrl;
+  }, 60);
+}
+
+function showProcessing(show) {
+  const el = document.getElementById('processing-overlay');
+  el.classList.toggle('show', show);
+}
+
+// ══════════════════════════════════════════
+//  등고선 → 높이맵 (BFS 거리 변환 — 탐험기 알고리즘)
+// ══════════════════════════════════════════
+function extractHeightmap(img) {
+  const SIZE = 128;
+  const cvs = document.createElement('canvas');
+  cvs.width = cvs.height = SIZE;
+  const ctx = cvs.getContext('2d');
+  ctx.drawImage(img, 0, 0, SIZE, SIZE);
+  const px = ctx.getImageData(0, 0, SIZE, SIZE).data;
+
+  // 그레이스케일
+  const gray = new Float32Array(SIZE * SIZE);
+  for (let i = 0; i < SIZE * SIZE; i++) {
+    gray[i] = (px[i*4]*0.299 + px[i*4+1]*0.587 + px[i*4+2]*0.114) / 255;
+  }
+
+  // Sobel 엣지 감지
+  const edge = new Float32Array(SIZE * SIZE);
+  for (let y = 1; y < SIZE - 1; y++) {
+    for (let x = 1; x < SIZE - 1; x++) {
+      const g = (v, u) => gray[(y+v)*SIZE+(x+u)];
+      const gx = -g(-1,-1)-2*g(0,-1)-g(1,-1)+g(-1,1)+2*g(0,1)+g(1,1);
+      const gy = -g(-1,-1)-2*g(-1,0)-g(-1,1)+g(1,-1)+2*g(1,0)+g(1,1);
+      edge[y*SIZE+x] = Math.min(1, Math.sqrt(gx*gx+gy*gy)*3);
+    }
+  }
+
+  // BFS 거리 변환: 엣지(등고선)에서 먼 안쪽 = 높음
+  const height = new Float32Array(SIZE * SIZE).fill(-1);
+  const queue = [];
+  const THRESH = 0.15;
+
+  for (let i = 0; i < SIZE * SIZE; i++) {
+    if (edge[i] > THRESH) { height[i] = 0; queue.push(i); }
+  }
+  for (let x = 0; x < SIZE; x++) {
+    [x, (SIZE-1)*SIZE+x].forEach(i => { if (height[i]<0) { height[i]=0; queue.push(i); } });
+  }
+  for (let y = 0; y < SIZE; y++) {
+    [y*SIZE, y*SIZE+SIZE-1].forEach(i => { if (height[i]<0) { height[i]=0; queue.push(i); } });
+  }
+
+  let head = 0;
+  const dirs = [-1, 1, -SIZE, SIZE];
+  while (head < queue.length) {
+    const cur = queue[head++];
+    const cy = Math.floor(cur/SIZE), cx = cur%SIZE;
+    for (const d of dirs) {
+      const nx = cx + (d===-1?-1:d===1?1:0);
+      const ny = cy + (d===-SIZE?-1:d===SIZE?1:0);
+      if (nx<0||nx>=SIZE||ny<0||ny>=SIZE) continue;
+      const ni = ny*SIZE+nx;
+      if (height[ni]<0) { height[ni]=height[cur]+1; queue.push(ni); }
+    }
+  }
+
+  // 정규화
+  let maxH = 0;
+  for (let i = 0; i < height.length; i++) if (height[i] > maxH) maxH = height[i];
+  if (maxH === 0) maxH = 1;
+  for (let i = 0; i < height.length; i++) height[i] = height[i]/maxH;
+
+  // 3단계 스무딩
+  return { data: smooth(height, SIZE, 3), size: SIZE };
+}
+
+function smooth(h, size, passes) {
+  let cur = h;
+  for (let p = 0; p < passes; p++) {
+    const nxt = new Float32Array(size*size);
+    for (let y=1;y<size-1;y++) for(let x=1;x<size-1;x++) {
+      const i=y*size+x;
+      nxt[i]=(cur[i]*4+cur[i-1]+cur[i+1]+cur[i-size]+cur[i+size])/8;
+    }
+    for(let x=0;x<size;x++){nxt[x]=cur[x];nxt[(size-1)*size+x]=cur[(size-1)*size+x];}
+    for(let y=0;y<size;y++){nxt[y*size]=cur[y*size];nxt[y*size+size-1]=cur[y*size+size-1];}
+    cur=nxt;
+  }
+  return cur;
+}
+
+// ══════════════════════════════════════════
+//  Three.js 3D 지형 렌더링 (변환기 UI + 탐험기 고품질 렌더)
+// ══════════════════════════════════════════
+function buildTerrain({ data, size }) {
+  const canvas = document.getElementById('three-canvas');
+  const W = canvas.clientWidth || window.innerWidth;
+  const H = canvas.clientHeight || (window.innerHeight - 200);
+
+  if (renderer3d) { renderer3d.dispose(); cancelAnimationFrame(animId); }
+
+  renderer3d = new THREE.WebGLRenderer({ canvas, antialias:true });
+  renderer3d.setSize(W, H);
+  renderer3d.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer3d.shadowMap.enabled = true;
+
+  scene3d = new THREE.Scene();
+  scene3d.background = new THREE.Color(0x060f1e);
+  scene3d.fog = new THREE.FogExp2(0x0a1628, 0.055);
+
+  camera3d = new THREE.PerspectiveCamera(55, W/H, 0.1, 500);
+  camera3d.position.set(0, 9, 15);
+  camera3d.lookAt(0, 1, 0);
+
+  // 조명
+  scene3d.add(new THREE.AmbientLight(0x4488cc, 0.65));
+  const sun = new THREE.DirectionalLight(0xffeedd, 1.3);
+  sun.position.set(10, 20, 10); sun.castShadow = true;
+  scene3d.add(sun);
+  const fill = new THREE.DirectionalLight(0x6644bb, 0.3);
+  fill.position.set(-10, 5, -10); scene3d.add(fill);
+
+  // 지형 지오메트리 (128×128 해상도)
+  const SEGS = size - 1;
+  const geo = new THREE.PlaneGeometry(16, 16, SEGS, SEGS);
+  geo.rotateX(-Math.PI/2);
+  const pos = geo.attributes.position;
+  const MAX_H = 5.5;
+  for (let i = 0; i < pos.count; i++) pos.setY(i, (data[i]||0)*MAX_H);
+  pos.needsUpdate = true;
+  geo.computeVertexNormals();
+
+  // 6단계 높이별 색상 (탐험기 팔레트)
+  const cols = new Float32Array(pos.count*3);
+  for (let i = 0; i < pos.count; i++) {
+    const t = data[i]||0;
+    let r,g,b;
+    if (t<0.15)      { r=0.05;g=0.18;b=0.45; }  // 바다
+    else if (t<0.22) { r=0.72;g=0.68;b=0.45; }  // 모래사장
+    else if (t<0.55) { r=0.15;g=0.60;b=0.25; }  // 초원
+    else if (t<0.75) { r=0.22;g=0.42;b=0.16; }  // 산림
+    else if (t<0.88) { r=0.50;g=0.42;b=0.32; }  // 암벽
+    else             { r=0.95;g=0.95;b=0.98; }  // 설산
+    cols[i*3]=r; cols[i*3+1]=g; cols[i*3+2]=b;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+
+  const mat = new THREE.MeshLambertMaterial({ vertexColors:true });
+  terrainMesh = new THREE.Mesh(geo, mat);
+  terrainMesh.castShadow = true;
+  terrainMesh.receiveShadow = true;
+  scene3d.add(terrainMesh);
+
+  // 와이어프레임 오버레이 (변환기)
+  const wireMat = new THREE.MeshBasicMaterial({ color:0xffffff, wireframe:true, opacity:0.05, transparent:true });
+  scene3d.add(new THREE.Mesh(geo, wireMat));
+
+  // 물
+  const waterGeo = new THREE.PlaneGeometry(18,18);
+  waterGeo.rotateX(-Math.PI/2);
+  waterMesh = new THREE.Mesh(waterGeo, new THREE.MeshLambertMaterial({ color:0x1a4a8a, transparent:true, opacity:0.7 }));
+  waterMesh.position.y = MAX_H*0.14;
+  scene3d.add(waterMesh);
+
+  // 별 파티클
+  const sPos = new Float32Array(600);
+  for (let i=0;i<200;i++) {
+    sPos[i*3]=(Math.random()-0.5)*90; sPos[i*3+1]=Math.random()*45+8; sPos[i*3+2]=(Math.random()-0.5)*90;
+  }
+  const sGeo = new THREE.BufferGeometry();
+  sGeo.setAttribute('position', new THREE.BufferAttribute(sPos,3));
+  scene3d.add(new THREE.Points(sGeo, new THREE.PointsMaterial({ color:0xffffff, size:0.14 })));
+
+  // 터치/마우스 컨트롤
+  setupOrbit(canvas);
+
+  // 렌더 루프
+  let t = 0;
+  function loop() {
+    animId = requestAnimationFrame(loop);
+    t += 0.008;
+    if (waterMesh) waterMesh.material.opacity = 0.62 + Math.sin(t)*0.08;
+    renderer3d.render(scene3d, camera3d);
+  }
+  loop();
+
+  // 리사이즈
+  new ResizeObserver(() => {
+    const w=canvas.clientWidth, h=canvas.clientHeight;
+    if(w&&h){ renderer3d.setSize(w,h); camera3d.aspect=w/h; camera3d.updateProjectionMatrix(); }
+  }).observe(canvas);
+}
+
+// ══════════════════════════════════════════
+//  터치/마우스 오빗 컨트롤
+// ══════════════════════════════════════════
+function setupOrbit(canvas) {
+  let drag=false, lx=0, ly=0, pinchD=0;
+  let theta=0.3, phi=0.82, r=15;
+
+  function apply() {
+    phi = Math.max(0.08, Math.min(Math.PI/2.1, phi));
+    camera3d.position.set(
+      r*Math.sin(phi)*Math.sin(theta),
+      r*Math.cos(phi),
+      r*Math.sin(phi)*Math.cos(theta)
+    );
+    camera3d.lookAt(0,1,0);
+  }
+
+  canvas.addEventListener('mousedown', e=>{ drag=true; lx=e.clientX; ly=e.clientY; });
+  window.addEventListener('mouseup', ()=>drag=false);
+  canvas.addEventListener('mousemove', e=>{
+    if(!drag) return;
+    theta -= (e.clientX-lx)*0.01; phi -= (e.clientY-ly)*0.01;
+    lx=e.clientX; ly=e.clientY; apply();
+  });
+  canvas.addEventListener('wheel', e=>{ r=Math.max(4,Math.min(32,r+e.deltaY*0.02)); apply(); },{passive:true});
+
+  canvas.addEventListener('touchstart', e=>{
+    if(e.touches.length===1){drag=true;lx=e.touches[0].clientX;ly=e.touches[0].clientY;}
+    else if(e.touches.length===2){
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      pinchD=Math.sqrt(dx*dx+dy*dy);
+    }
+    e.preventDefault();
+  },{passive:false});
+
+  canvas.addEventListener('touchmove', e=>{
+    if(e.touches.length===1&&drag){
+      theta-=(e.touches[0].clientX-lx)*0.012; phi-=(e.touches[0].clientY-ly)*0.012;
+      lx=e.touches[0].clientX; ly=e.touches[0].clientY; apply();
+    } else if(e.touches.length===2){
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      r=Math.max(4,Math.min(32,r-(d-pinchD)*0.03)); pinchD=d; apply();
+    }
+    e.preventDefault();
+  },{passive:false});
+
+  canvas.addEventListener('touchend', ()=>drag=false);
+  apply();
+}
+
+// ══════════════════════════════════════════
+//  버튼 기능
+// ══════════════════════════════════════════
+function toggleWireframe() {
+  if (!terrainMesh) return;
+  wireframeOn = !wireframeOn;
+  terrainMesh.material.wireframe = wireframeOn;
+}
+
+function resetCameraView() {
+  if (!camera3d) return;
+  camera3d.position.set(0, 9, 15);
+  camera3d.lookAt(0, 1, 0);
+}
+
+// ══════════════════════════════════════════
+//  유틸
+// ══════════════════════════════════════════
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 4000);
+}
+</script>
+</body>
+</html>
