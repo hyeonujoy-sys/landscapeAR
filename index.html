@@ -7,8 +7,8 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#060f1e;color:#fff;overflow:hidden;position:fixed;inset:0;display:flex;flex-direction:column}
-#header{background:linear-gradient(135deg,#1a3a5c,#0d2137);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #2a7fff;flex-shrink:0;z-index:100}
+body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#060f1e;color:#fff;overflow:hidden;height:100vh;height:100dvh;display:flex;flex-direction:column}
+#header{background:linear-gradient(135deg,#1a3a5c,#0d2137);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #2a7fff;flex-shrink:0}
 #header h1{font-size:1.1rem;font-weight:800;color:#5ab4ff}
 #header p{font-size:0.72rem;color:#8bb8d4;margin-top:2px}
 .btn-help{background:rgba(42,127,255,0.2);color:#5ab4ff;border:1px solid rgba(42,127,255,0.4);border-radius:20px;padding:7px 14px;font-size:0.8rem;cursor:pointer}
@@ -21,88 +21,63 @@ body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#06
 #main{flex:1;position:relative;overflow:hidden;min-height:0}
 .screen{position:absolute;inset:0;display:none;flex-direction:column}
 .screen.active{display:flex}
-
-/* 시작 화면 */
-#screen-start{background:linear-gradient(160deg,#060f1e,#0d2137);align-items:center;justify-content:center;gap:16px;padding:24px}
-.start-icon{font-size:4.5rem;animation:float 3s ease-in-out infinite}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-.start-title{font-size:1.7rem;font-weight:900;color:#5ab4ff;text-align:center;line-height:1.3}
-.start-sub{font-size:0.9rem;color:#8bb8d4;text-align:center;line-height:1.7}
-.btn-primary{background:linear-gradient(135deg,#2a7fff,#1a5fcc);color:#fff;border:none;border-radius:50px;padding:14px 38px;font-size:1rem;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(42,127,255,0.45)}
+#screen-start{background:linear-gradient(160deg,#060f1e,#0d2137);align-items:center;justify-content:center;gap:18px;padding:24px}
+.start-icon{font-size:5rem;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.start-title{font-size:1.9rem;font-weight:900;color:#5ab4ff;text-align:center;line-height:1.3}
+.start-sub{font-size:0.95rem;color:#8bb8d4;text-align:center;line-height:1.7}
+.btn-primary{background:linear-gradient(135deg,#2a7fff,#1a5fcc);color:#fff;border:none;border-radius:50px;padding:15px 40px;font-size:1.05rem;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(42,127,255,0.45);transition:all 0.2s}
 .btn-primary:active{transform:scale(0.96)}
-
-/* 안내 화면 */
-#screen-guide{background:#0a1628;overflow-y:auto}
-.guide-inner{padding:16px;display:flex;flex-direction:column;gap:12px}
-.guide-title{font-size:1.1rem;font-weight:700;color:#5ab4ff;text-align:center;margin-bottom:4px}
-.guide-step{background:rgba(42,127,255,0.1);border:1px solid rgba(42,127,255,0.3);border-radius:12px;padding:14px;display:flex;align-items:flex-start;gap:12px}
-.guide-step .num{width:36px;height:36px;border-radius:50%;background:#2a7fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;flex-shrink:0}
-.guide-step .text h3{font-size:0.95rem;font-weight:700;color:#fff;margin-bottom:4px}
-.guide-step .text p{font-size:0.82rem;color:#8bb8d4;line-height:1.5}
-.tip-box{background:rgba(255,200,0,0.08);border:1px solid rgba(255,200,0,0.3);border-radius:10px;padding:12px;font-size:0.82rem;color:#ffd966;line-height:1.6}
-.guide-bottom{padding:12px;flex-shrink:0;background:rgba(0,0,0,0.2)}
-
-/* 카메라 화면 */
 #screen-camera{background:#000;position:relative}
-#video{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;-webkit-playsinline:true;playsinline:true}
-#canvas-overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
-.camera-ui{position:absolute;bottom:0;left:0;right:0;padding:16px;background:linear-gradient(transparent,rgba(0,0,0,0.88));display:flex;flex-direction:column;align-items:center;gap:10px;z-index:10}
-.camera-hint{background:rgba(42,127,255,0.85);border-radius:20px;padding:6px 16px;font-size:0.85rem;font-weight:600}
-.camera-buttons{display:flex;gap:16px;align-items:center}
-.btn-capture{width:68px;height:68px;border-radius:50%;background:#fff;border:4px solid #5ab4ff;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 0 20px rgba(90,180,255,0.5)}
-.btn-capture:active{transform:scale(0.9);background:#c8e8ff}
-.btn-secondary{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:24px;padding:10px 18px;font-size:0.85rem;cursor:pointer}
-.scan-frame{position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);width:80%;max-width:460px;aspect-ratio:4/3;border:2px solid rgba(90,180,255,0.8);border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,0.45);pointer-events:none;animation:scanPulse 2s ease-in-out infinite}
-@keyframes scanPulse{0%,100%{border-color:rgba(90,180,255,0.9)}50%{border-color:rgba(90,180,255,0.3)}}
-.scan-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(90,180,255,0.8),transparent);animation:scanLine 2s linear infinite}
-@keyframes scanLine{0%{top:0;opacity:1}100%{top:100%;opacity:0}}
+#video{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}
+#canvas-hidden{display:none}
+.scan-frame{position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);width:80%;max-width:460px;aspect-ratio:4/3;border:3px solid rgba(90,180,255,0.8);border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,0.45);pointer-events:none;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{border-color:rgba(90,180,255,0.9)}50%{border-color:rgba(90,180,255,0.3)}}
+.scan-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#5ab4ff,transparent);animation:scanAnim 2s linear infinite}
+@keyframes scanAnim{0%{top:0;opacity:1}100%{top:100%;opacity:0.2}}
 .scan-corner{position:absolute;width:20px;height:20px;border-color:#5ab4ff;border-style:solid}
-.scan-corner.tl{top:-2px;left:-2px;border-width:3px 0 0 3px}
-.scan-corner.tr{top:-2px;right:-2px;border-width:3px 3px 0 0}
-.scan-corner.bl{bottom:-2px;left:-2px;border-width:0 0 3px 3px}
-.scan-corner.br{bottom:-2px;right:-2px;border-width:0 3px 3px 0}
-#cam-error{display:none;position:absolute;inset:0;background:#000;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center;z-index:20}
-#cam-error.show{display:flex}
-#cam-error h3{font-size:1.1rem;color:#ff6b6b}
-#cam-error p{font-size:0.85rem;color:#8bb8d4;line-height:1.6}
-
-/* 3D 화면 */
-#screen-3d{background:#060f1e;position:relative}
-#three-canvas{position:absolute;inset:0;width:100%!important;height:100%!important}
-.result-ui{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.85));padding:12px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:10}
-.result-hint{font-size:0.78rem;color:rgba(255,255,255,0.7)}
-.result-btns{display:flex;gap:10px}
-.btn-rescan{background:linear-gradient(135deg,#2a7fff,#1a5fcc);color:#fff;border:none;border-radius:22px;padding:10px 24px;font-size:0.9rem;font-weight:700;cursor:pointer}
-.btn-reset{background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:22px;padding:10px 20px;font-size:0.9rem;cursor:pointer}
-
-/* 로딩 */
-#loading{display:none;position:fixed;inset:0;background:rgba(6,15,30,0.92);flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999}
-#loading.show{display:flex}
-.spinner{width:56px;height:56px;border:4px solid rgba(255,255,255,0.1);border-top-color:#2a7fff;border-radius:50%;animation:spin 0.8s linear infinite}
+.scan-corner.tl{top:-3px;left:-3px;border-width:3px 0 0 3px}
+.scan-corner.tr{top:-3px;right:-3px;border-width:3px 3px 0 0}
+.scan-corner.bl{bottom:-3px;left:-3px;border-width:0 0 3px 3px}
+.scan-corner.br{bottom:-3px;right:-3px;border-width:0 3px 3px 0}
+.camera-ui{position:absolute;bottom:0;left:0;right:0;padding:16px;background:linear-gradient(transparent,rgba(0,0,0,0.85));display:flex;flex-direction:column;align-items:center;gap:10px;z-index:10}
+.camera-hint{background:rgba(42,127,255,0.8);border-radius:20px;padding:6px 16px;font-size:0.85rem;font-weight:600}
+.camera-buttons{display:flex;gap:16px;align-items:center}
+.btn-capture{width:70px;height:70px;border-radius:50%;background:#fff;border:4px solid #5ab4ff;cursor:pointer;font-size:1.8rem;display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(90,180,255,0.5);transition:all 0.15s}
+.btn-capture:active{transform:scale(0.9)}
+.btn-secondary{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:24px;padding:10px 20px;font-size:0.9rem;cursor:pointer}
+#file-input{display:none}
+#loading-overlay{display:none;position:fixed;inset:0;background:rgba(6,15,30,0.93);flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999}
+#loading-overlay.show{display:flex}
+.spinner{width:60px;height:60px;border:5px solid rgba(255,255,255,0.1);border-top-color:#2a7fff;border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-#loading-text{font-size:1rem;font-weight:600;color:#5ab4ff}
-
-/* 도움말 오버레이 */
-#help-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:16px}
+#loading-text{font-size:16px;font-weight:600;color:#5ab4ff}
+#screen-3d{background:#060f1e;position:relative}
+#three-canvas{width:100%;height:100%;display:block}
+.result-ui{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.85));padding:12px 16px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.result-hint{font-size:0.8rem;color:rgba(255,255,255,0.7)}
+.result-buttons{display:flex;gap:10px}
+.btn-rescan{background:linear-gradient(135deg,#2a7fff,#1a5fcc);color:#fff;border:none;border-radius:24px;padding:11px 28px;font-size:0.95rem;font-weight:700;cursor:pointer}
+.btn-reset{background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:24px;padding:11px 22px;font-size:0.9rem;cursor:pointer}
+#error-msg{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:998;background:rgba(10,25,50,0.97);border:1px solid #2a7fff;color:#fff;padding:24px 28px;border-radius:16px;font-size:0.9rem;text-align:center;max-width:86%;flex-direction:column;gap:12px}
+#error-msg.show{display:flex}
+#error-msg button{background:#2a7fff;color:#fff;border:none;border-radius:12px;padding:10px 20px;cursor:pointer;font-weight:700}
+#help-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center;padding:20px}
 #help-overlay.show{display:flex}
-.help-box{background:#0d2137;border:1px solid #2a7fff;border-radius:16px;padding:20px;max-width:400px;width:100%}
-.help-box h3{color:#5ab4ff;margin-bottom:12px;font-size:1rem}
-.help-box ul{list-style:none;display:flex;flex-direction:column;gap:8px}
-.help-box li{font-size:0.85rem;color:#c8dff0;padding-left:1.2em;position:relative;line-height:1.5}
-.help-box li::before{content:"✦";position:absolute;left:0;color:#2a7fff;font-size:0.7rem;top:2px}
-.btn-close{background:#2a7fff;color:#fff;border:none;border-radius:24px;padding:10px 32px;font-size:0.95rem;font-weight:700;cursor:pointer}
+.help-box{background:#0d2137;border:1px solid #2a7fff;border-radius:20px;padding:24px;max-width:420px;width:100%}
+.help-box h2{color:#5ab4ff;margin-bottom:16px;font-size:1.1rem}
+.help-item{display:flex;gap:12px;margin-bottom:14px;align-items:flex-start}
+.help-num{background:#2a7fff;color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:0.85rem}
+.help-text{font-size:0.88rem;color:#c8d8e8;line-height:1.55}
+.help-text strong{color:#5ab4ff}
+.help-close{width:100%;background:#2a7fff;color:#fff;border:none;border-radius:12px;padding:12px;font-size:1rem;font-weight:700;cursor:pointer;margin-top:8px}
 </style>
 </head>
 <body>
-
 <div id="header">
-  <div>
-    <h1>🗻 등고선 3D 지형 탐험기</h1>
-    <p>등고선을 찍으면 3D 산이 만들어져요!</p>
-  </div>
+  <div><h1>🗻 등고선 3D 지형 탐험기</h1><p>등고선을 찍으면 3D 산이 만들어져요!</p></div>
   <button class="btn-help" onclick="toggleHelp()">❓ 도움말</button>
 </div>
-
 <div id="step-bar">
   <button class="step-pill active" id="pill-1" onclick="goStep(1)">① 안내</button>
   <span class="step-arrow">›</span>
@@ -110,457 +85,298 @@ body{font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#06
   <span class="step-arrow">›</span>
   <button class="step-pill inactive" id="pill-3">③ 3D 지형</button>
 </div>
-
 <div id="main">
-
-  <!-- 시작 화면 -->
   <div class="screen active" id="screen-start">
-    <div class="start-icon">🏔️</div>
-    <div class="start-title">등고선으로<br>3D 산을 만들어요!</div>
-    <div class="start-sub">종이에 동그란 선을 그리고<br>카메라로 찍으면 진짜 산이 나타나요 🎉</div>
-    <button class="btn-primary" onclick="goStep(2)">시작하기 →</button>
+    <div class="start-icon">🗻</div>
+    <div class="start-title">내 등고선으로<br>3D 산을 만들자!</div>
+    <div class="start-sub">종이에 동그라미를 여러 겹 그리고<br>카메라로 찍으면 3D 산이 뚝딱!</div>
+    <button class="btn-primary" onclick="goStep(2)">📷 시작하기</button>
   </div>
-
-  <!-- 안내 화면 -->
-  <div class="screen" id="screen-guide">
-    <div class="guide-inner">
-      <div class="guide-title">📋 이렇게 해보세요!</div>
-      <div class="guide-step">
-        <div class="num">1</div>
-        <div class="text">
-          <h3>✏️ 종이에 등고선 그리기</h3>
-          <p>흰 종이에 <strong>검은 펜</strong>으로 동그라미를 여러 개 겹쳐 그려요.<br>가운데로 갈수록 높은 산이 만들어져요!</p>
-        </div>
-      </div>
-      <div class="guide-step">
-        <div class="num">2</div>
-        <div class="text">
-          <h3>📷 카메라로 찍기</h3>
-          <p>파란 테두리 안에 종이가 꽉 들어오게 맞추고<br><strong>📸 촬영 버튼</strong>을 눌러요.</p>
-        </div>
-      </div>
-      <div class="guide-step">
-        <div class="num">3</div>
-        <div class="text">
-          <h3>🗻 3D 산 탐험하기</h3>
-          <p>내가 그린 등고선이 <strong>3D 산</strong>으로 변신! 손가락으로 돌려보세요.</p>
-        </div>
-      </div>
-      <div class="tip-box">
-        💡 <strong>잘 되려면:</strong> 선을 굵고 진하게 그리기 / 밝은 곳에서 촬영 / 종이를 반듯하게 놓기
-      </div>
-    </div>
-    <div class="guide-bottom">
-      <button class="btn-primary" style="width:100%" onclick="goStep(3)">카메라 켜기 📷</button>
-    </div>
-  </div>
-
-  <!-- 카메라 화면 -->
   <div class="screen" id="screen-camera">
     <video id="video" autoplay playsinline muted webkit-playsinline></video>
-    <canvas id="canvas-overlay"></canvas>
+    <canvas id="canvas-hidden"></canvas>
     <div class="scan-frame">
       <div class="scan-line"></div>
-      <div class="scan-corner tl"></div>
-      <div class="scan-corner tr"></div>
-      <div class="scan-corner bl"></div>
-      <div class="scan-corner br"></div>
+      <div class="scan-corner tl"></div><div class="scan-corner tr"></div>
+      <div class="scan-corner bl"></div><div class="scan-corner br"></div>
     </div>
     <div class="camera-ui">
-      <div class="camera-hint">📄 등고선 종이를 테두리 안에 맞춰주세요</div>
+      <div class="camera-hint">📄 등고선 종이를 파란 테두리 안에 맞춰주세요</div>
       <div class="camera-buttons">
-        <button class="btn-secondary" onclick="switchCamera()">🔄 카메라 전환</button>
+        <button class="btn-secondary" onclick="switchCamera()">🔄 전환</button>
         <button class="btn-capture" onclick="capturePhoto()">📸</button>
-        <button class="btn-secondary" onclick="openGallery()">🖼️ 사진 선택</button>
+        <label class="btn-secondary" for="file-input">🖼️ 사진선택</label>
+        <input type="file" id="file-input" accept="image/*" onchange="loadFromFile(event)">
       </div>
     </div>
-    <div id="cam-error">
-      <h3>📷 카메라를 켤 수 없어요</h3>
-      <p>브라우저에서 카메라 권한을 허용해주세요.<br><br>주소창 옆 🔒 자물쇠 아이콘 → 카메라 → 허용</p>
-      <button class="btn-primary" onclick="startCamera()">다시 시도</button>
-      <button class="btn-secondary" style="background:rgba(255,255,255,0.1)" onclick="openGallery()">🖼️ 갤러리에서 선택</button>
-    </div>
-    <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFileSelect(event)">
   </div>
-
-  <!-- 3D 화면 -->
   <div class="screen" id="screen-3d">
     <canvas id="three-canvas"></canvas>
     <div class="result-ui">
-      <div class="result-hint">✋ 손가락으로 돌려보세요 👆</div>
-      <div class="result-btns">
-        <button class="btn-reset" onclick="resetView()">📐 초기화</button>
-        <button class="btn-rescan" onclick="goStep(3)">📷 다시 찍기</button>
+      <div class="result-hint">🖐️ 손가락으로 돌려보세요</div>
+      <div class="result-buttons">
+        <button class="btn-reset" onclick="resetView()">🔄 초기화</button>
+        <button class="btn-rescan" onclick="goStep(2)">📸 다시 찍기</button>
       </div>
     </div>
   </div>
-
 </div>
-
-<!-- 로딩 -->
-<div id="loading">
-  <div class="spinner"></div>
-  <div id="loading-text">등고선 분석 중...</div>
+<div id="loading-overlay"><div class="spinner"></div><div id="loading-text">🗻 3D 지형 만드는 중...</div></div>
+<div id="error-msg">
+  <div id="error-text"></div>
+  <button onclick="document.getElementById('file-input').click();hideError()">🖼️ 사진으로 해보기</button>
+  <button onclick="hideError()" style="background:rgba(255,255,255,0.1)">닫기</button>
 </div>
-
-<!-- 도움말 -->
 <div id="help-overlay">
   <div class="help-box">
-    <h3>🗻 잘 되는 팁</h3>
-    <ul>
-      <li>검은 볼펜이나 매직으로 굵게 그리기</li>
-      <li>타원이나 원 모양으로 여러 겹 그리기</li>
-      <li>종이를 평평하게 놓고 밝은 곳에서 촬영</li>
-      <li>테두리 안에 종이가 꽉 차도록 가까이</li>
-      <li>그림자가 생기지 않도록 주의</li>
-    </ul>
+    <h2>📖 사용 방법</h2>
+    <div class="help-item"><div class="help-num">1</div><div class="help-text"><strong>굵은 검은 펜</strong>으로 흰 종이에 동그라미를 여러 겹 그려요. 가운데로 갈수록 높은 산이 돼요!</div></div>
+    <div class="help-item"><div class="help-num">2</div><div class="help-text">밝은 곳에서 <strong>파란 테두리 안에 종이를 맞추고</strong> 📸 버튼을 눌러요.</div></div>
+    <div class="help-item"><div class="help-num">3</div><div class="help-text">3D 산이 만들어지면 <strong>손가락으로 돌려보며</strong> 탐험해요! 🏔️</div></div>
+    <div class="help-item"><div class="help-num">💡</div><div class="help-text">카메라가 안 되면 <strong>🖼️ 사진선택</strong>으로 저장된 사진을 쓸 수 있어요.</div></div>
+    <button class="help-close" onclick="toggleHelp()">확인!</button>
   </div>
-  <button class="btn-close" onclick="toggleHelp()">닫기</button>
 </div>
-
 <script>
-let stream = null;
-let facingMode = 'environment';
-let scene, camera, renderer, terrain, controls3d;
-let isDragging = false, prevX = 0, prevY = 0;
-let pinchDist = 0;
-let captureCanvas = document.createElement('canvas');
+let stream=null, facingMode='environment';
+let threeRenderer=null, threeScene=null, threeCamera=null, terrainMesh=null;
+let lastPinchDist=0;
 
-// ── 단계 이동 ──
-function goStep(n) {
-  ['screen-start','screen-guide','screen-camera','screen-3d'].forEach((id,i) => {
-    document.getElementById(id).classList.toggle('active', i === n-1);
+function goStep(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  ['pill-1','pill-2','pill-3'].forEach((id,i)=>{
+    const p=document.getElementById(id);
+    p.className='step-pill '+(i+1<n?'done':i+1===n?'active':'inactive');
   });
-  ['pill-1','pill-2','pill-3'].forEach((id,i) => {
-    const p = document.getElementById(id);
-    p.className = 'step-pill ' + (i+1 < n ? 'done' : i+1 === n ? 'active' : 'inactive');
-  });
-  if (n === 3) startCamera();
-  if (n !== 3 && stream) stopCamera();
+  if(n===1){stopCamera();document.getElementById('screen-start').classList.add('active');}
+  if(n===2){document.getElementById('screen-camera').classList.add('active');startCamera();}
+  if(n===3){document.getElementById('screen-3d').classList.add('active');}
 }
 
-// ── 카메라 ──
-async function startCamera() {
-  document.getElementById('cam-error').classList.remove('show');
-  const constraints = [
-    {video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}},
-    {video:{facingMode:'environment'}},
+async function startCamera(){
+  stopCamera();
+  const video=document.getElementById('video');
+  const tries=[
+    {video:{facingMode,width:{ideal:1280},height:{ideal:960}}},
+    {video:{facingMode}},
     {video:true}
   ];
-  for (const c of constraints) {
-    try {
-      stream = await navigator.mediaDevices.getUserMedia(c);
-      const v = document.getElementById('video');
-      v.srcObject = stream;
-      v.setAttribute('playsinline','');
-      v.setAttribute('webkit-playsinline','');
-      await v.play();
-      resizeOverlay();
+  for(const c of tries){
+    try{
+      stream=await navigator.mediaDevices.getUserMedia(c);
+      video.srcObject=stream;
+      await video.play();
       return;
-    } catch(e) {}
+    }catch(e){}
   }
-  document.getElementById('cam-error').classList.add('show');
+  showError('카메라 권한이 필요해요.<br>주소창 왼쪽 🔒를 눌러 카메라를 <b>허용</b>으로 바꿔주세요.');
 }
+function stopCamera(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}}
+function switchCamera(){facingMode=facingMode==='environment'?'user':'environment';startCamera();}
 
-function stopCamera() {
-  if (stream) { stream.getTracks().forEach(t=>t.stop()); stream = null; }
-}
-
-async function switchCamera() {
+function capturePhoto(){
+  const video=document.getElementById('video');
+  const canvas=document.getElementById('canvas-hidden');
+  canvas.width=video.videoWidth||640; canvas.height=video.videoHeight||480;
+  canvas.getContext('2d').drawImage(video,0,0);
   stopCamera();
-  facingMode = facingMode === 'environment' ? 'user' : 'environment';
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode}});
-    const v = document.getElementById('video');
-    v.srcObject = stream;
-    await v.play();
-  } catch(e) { document.getElementById('cam-error').classList.add('show'); }
+  processImage(canvas);
 }
-
-function resizeOverlay() {
-  const v = document.getElementById('video');
-  const c = document.getElementById('canvas-overlay');
-  c.width = v.offsetWidth; c.height = v.offsetHeight;
-}
-
-function capturePhoto() {
-  const v = document.getElementById('video');
-  captureCanvas.width = v.videoWidth || 640;
-  captureCanvas.height = v.videoHeight || 480;
-  captureCanvas.getContext('2d').drawImage(v, 0, 0);
-  processImage(captureCanvas);
-}
-
-function openGallery() { document.getElementById('file-input').click(); }
-function handleFileSelect(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const img = new Image();
-  img.onload = () => {
-    captureCanvas.width = img.width;
-    captureCanvas.height = img.height;
-    captureCanvas.getContext('2d').drawImage(img, 0, 0);
-    processImage(captureCanvas);
+function loadFromFile(e){
+  const file=e.target.files[0]; if(!file) return;
+  const img=new Image();
+  img.onload=()=>{
+    const canvas=document.getElementById('canvas-hidden');
+    canvas.width=img.width; canvas.height=img.height;
+    canvas.getContext('2d').drawImage(img,0,0);
+    processImage(canvas);
   };
-  img.src = URL.createObjectURL(file);
+  img.src=URL.createObjectURL(file);
 }
 
-// ── 핵심: 새 알고리즘 (방사형 스캔) ──
-function processImage(src) {
-  showLoading('등고선 분석 중...');
-  setTimeout(() => {
-    try {
-      const SIZE = 128;
-      const tmp = document.createElement('canvas');
-      tmp.width = SIZE; tmp.height = SIZE;
-      const ctx = tmp.getContext('2d');
-      ctx.drawImage(src, 0, 0, SIZE, SIZE);
-      const imgData = ctx.getImageData(0, 0, SIZE, SIZE);
-      const px = imgData.data;
+// ══════════════════════════════════════════════════
+//  새 알고리즘: 방사형 스캔 (Radial Ray Casting)
+//  원리: 각 픽셀에서 여러 방향으로 선을 그어
+//        등고선(어두운 픽셀)과 몇 번 교차하는지 셈
+//        교차 횟수 = 해당 위치의 고도
+//        → 가장 안쪽 = 교차 가장 많음 = 가장 높음
+// ══════════════════════════════════════════════════
+function processImage(srcCanvas){
+  showLoading('🔍 등고선 분석 중...');
+  goStep(3);
+  setTimeout(()=>{
+    const W=80, H=60;
+    const off=document.createElement('canvas');
+    off.width=W; off.height=H;
+    const octx=off.getContext('2d');
+    octx.drawImage(srcCanvas,0,0,W,H);
+    const px=octx.getImageData(0,0,W,H).data;
 
-      // 1) 적응형 이진화: 각 픽셀의 밝기 계산 후 임계값 적용
-      const gray = new Uint8Array(SIZE * SIZE);
-      for (let i = 0; i < SIZE * SIZE; i++) {
-        gray[i] = Math.round(0.299*px[i*4] + 0.587*px[i*4+1] + 0.114*px[i*4+2]);
-      }
-
-      // 로컬 평균으로 적응형 임계값
-      const BLOCK = 15;
-      const isBg = new Uint8Array(SIZE * SIZE); // 1=배경(흰색), 0=선(검정)
-      for (let y = 0; y < SIZE; y++) {
-        for (let x = 0; x < SIZE; x++) {
-          let sum = 0, cnt = 0;
-          for (let dy = -BLOCK; dy <= BLOCK; dy++) {
-            for (let dx = -BLOCK; dx <= BLOCK; dx++) {
-              const ny = y+dy, nx = x+dx;
-              if (ny>=0&&ny<SIZE&&nx>=0&&nx<SIZE) { sum+=gray[ny*SIZE+nx]; cnt++; }
-            }
-          }
-          const thresh = sum/cnt - 10;
-          isBg[y*SIZE+x] = gray[y*SIZE+x] > thresh ? 1 : 0;
-        }
-      }
-
-      // 2) 방사형 스캔 알고리즘
-      // 각 픽셀에서 360도 방향으로 광선을 쏘아 교차하는 선의 수를 셈
-      // → 안쪽 픽셀일수록 선을 더 많이 교차 = 높은 고도
-      const RAYS = 36; // 36방향 (10도 간격)
-      const height = new Float32Array(SIZE * SIZE);
-      const centerX = SIZE/2, centerY = SIZE/2;
-
-      for (let y = 0; y < SIZE; y++) {
-        for (let x = 0; x < SIZE; x++) {
-          if (!isBg[y*SIZE+x]) { height[y*SIZE+x] = 0; continue; }
-          let totalCross = 0;
-          for (let r = 0; r < RAYS; r++) {
-            const angle = (r / RAYS) * Math.PI * 2;
-            const dx = Math.cos(angle), dy = Math.sin(angle);
-            let cx = x + dx, cy = y + dy;
-            let crossings = 0;
-            let prevVal = isBg[y*SIZE+x];
-            let steps = 0;
-            while (cx>=0&&cx<SIZE&&cy>=0&&cy<SIZE&&steps<SIZE) {
-              const ix = Math.round(cx), iy = Math.round(cy);
-              const v = isBg[iy*SIZE+ix];
-              if (prevVal === 1 && v === 0) crossings++; // 배경→선: 교차
-              prevVal = v;
-              cx += dx; cy += dy; steps++;
-            }
-            totalCross += crossings;
-          }
-          height[y*SIZE+x] = totalCross / RAYS;
-        }
-      }
-
-      // 3) 가우시안 스무딩 (5x5)
-      const smoothed = new Float32Array(SIZE * SIZE);
-      const kernel = [1,4,7,4,1, 4,16,26,16,4, 7,26,41,26,7, 4,16,26,16,4, 1,4,7,4,1];
-      const kSum = 273;
-      for (let y = 0; y < SIZE; y++) {
-        for (let x = 0; x < SIZE; x++) {
-          let v = 0, w = 0;
-          for (let ky = 0; ky < 5; ky++) {
-            for (let kx = 0; kx < 5; kx++) {
-              const ny = y+ky-2, nx = x+kx-2;
-              if (ny>=0&&ny<SIZE&&nx>=0&&nx<SIZE) {
-                const k = kernel[ky*5+kx];
-                v += height[ny*SIZE+nx]*k; w += k;
-              }
-            }
-          }
-          smoothed[y*SIZE+x] = w > 0 ? v/w : 0;
-        }
-      }
-
-      // 4) 정규화
-      let maxH = 0;
-      for (let i = 0; i < SIZE*SIZE; i++) maxH = Math.max(maxH, smoothed[i]);
-      if (maxH === 0) maxH = 1;
-      const finalH = new Float32Array(SIZE*SIZE);
-      for (let i = 0; i < SIZE*SIZE; i++) finalH[i] = smoothed[i]/maxH;
-
-      build3D(finalH, SIZE);
-    } catch(e) {
-      hideLoading();
-      alert('처리 중 오류가 발생했어요. 다시 시도해주세요.');
+    // 그레이스케일
+    const gray=new Float32Array(W*H);
+    for(let i=0;i<W*H;i++){
+      gray[i]=(px[i*4]*0.299+px[i*4+1]*0.587+px[i*4+2]*0.114);
     }
-  }, 100);
-}
 
-// ── Three.js 3D 빌드 ──
-function build3D(heightMap, SIZE) {
-  showLoading('3D 지형 만드는 중...');
-  setTimeout(() => {
-    const canvas = document.getElementById('three-canvas');
-    const W = canvas.parentElement.clientWidth;
-    const H = canvas.parentElement.clientHeight;
-
-    if (renderer) { renderer.dispose(); }
-    renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
-    renderer.setSize(W, H);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setClearColor(0x060f1e, 1);
-
-    scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x060f1e, 80, 150);
-
-    camera = new THREE.PerspectiveCamera(45, W/H, 0.1, 500);
-    camera.position.set(0, 45, 70);
-    camera.lookAt(0, 0, 0);
-
-    // 조명
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    const dir = new THREE.DirectionalLight(0xfff0d0, 1.2);
-    dir.position.set(30, 60, 40);
-    scene.add(dir);
-    const dir2 = new THREE.DirectionalLight(0xd0e8ff, 0.4);
-    dir2.position.set(-30, 20, -20);
-    scene.add(dir2);
-
-    // 지형 메쉬
-    const SEGS = SIZE - 1;
-    const geo = new THREE.PlaneGeometry(60, 60, SEGS, SEGS);
-    geo.rotateX(-Math.PI/2);
-    const pos = geo.attributes.position;
-    for (let i = 0; i < pos.count; i++) {
-      const x = Math.round((pos.getX(i)/60 + 0.5) * SEGS);
-      const z = Math.round((pos.getZ(i)/60 + 0.5) * SEGS);
-      const xi = Math.min(Math.max(x, 0), SIZE-1);
-      const zi = Math.min(Math.max(z, 0), SIZE-1);
-      const h = heightMap[zi*SIZE+xi];
-      pos.setY(i, h * 22);
+    // 적응형 이진화: 주변 블록 평균 대비 어두운 픽셀 = 등고선
+    const bsize=8;
+    const isLine=new Uint8Array(W*H);
+    for(let y=0;y<H;y++){
+      for(let x=0;x<W;x++){
+        let sum=0,cnt=0;
+        for(let dy=-bsize;dy<=bsize;dy++) for(let dx=-bsize;dx<=bsize;dx++){
+          const nx=x+dx,ny=y+dy;
+          if(nx>=0&&nx<W&&ny>=0&&ny<H){sum+=gray[ny*W+nx];cnt++;}
+        }
+        const localAvg=sum/cnt;
+        isLine[y*W+x]=gray[y*W+x]<localAvg*0.75?1:0;
+      }
     }
-    pos.needsUpdate = true;
-    geo.computeVertexNormals();
 
-    // 높이별 색상
-    const colors = [];
-    for (let i = 0; i < pos.count; i++) {
-      const h = pos.getY(i) / 22;
-      let c;
-      if (h < 0.05)      c = new THREE.Color(0x1a4a8a); // 바다
-      else if (h < 0.12) c = new THREE.Color(0xd4a853); // 해안/모래
-      else if (h < 0.30) c = new THREE.Color(0x4a8c3f); // 초원
-      else if (h < 0.55) c = new THREE.Color(0x2d6b28); // 산림
-      else if (h < 0.78) c = new THREE.Color(0x7a6050); // 암벽
-      else               c = new THREE.Color(0xf0f0f0); // 설산
-      colors.push(c.r, c.g, c.b);
+    // 방사형 스캔: 8방향 광선 교차 횟수 카운트
+    const NRAYS=8;
+    const heightMap=new Float32Array(W*H);
+    for(let y=0;y<H;y++){
+      for(let x=0;x<W;x++){
+        if(isLine[y*W+x]){heightMap[y*W+x]=0;continue;}
+        let total=0;
+        for(let r=0;r<NRAYS;r++){
+          const angle=r*Math.PI/NRAYS;
+          const dx=Math.cos(angle),dy=Math.sin(angle);
+          let cx=x+0.5,cy=y+0.5,prev=0,cross=0;
+          for(let s=0;s<Math.max(W,H)*1.5;s++){
+            cx+=dx;cy+=dy;
+            const ix=Math.round(cx),iy=Math.round(cy);
+            if(ix<0||ix>=W||iy<0||iy>=H)break;
+            const cur=isLine[iy*W+ix];
+            if(cur===1&&prev===0)cross++;
+            prev=cur;
+          }
+          total+=cross;
+        }
+        heightMap[y*W+x]=total/NRAYS;
+      }
     }
-    geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-    const mat = new THREE.MeshPhongMaterial({vertexColors:true, shininess:25, flatShading:false});
-    terrain = new THREE.Mesh(geo, mat);
-    scene.add(terrain);
 
-    // 와이어프레임 (얇게)
-    const wgeo = geo.clone();
-    const wmat = new THREE.MeshBasicMaterial({color:0xffffff, wireframe:true, transparent:true, opacity:0.04});
-    scene.add(new THREE.Mesh(wgeo, wmat));
+    // 가우시안 스무딩 3회 → 자연스러운 산 모양
+    let sm=heightMap;
+    for(let pass=0;pass<3;pass++) sm=gaussSmooth(sm,W,H,2);
 
-    // 물 평면
-    const wplane = new THREE.Mesh(
-      new THREE.PlaneGeometry(62,62),
-      new THREE.MeshPhongMaterial({color:0x1a3a6a, transparent:true, opacity:0.6, shininess:100})
-    );
-    wplane.rotation.x = -Math.PI/2;
-    wplane.position.y = 1.1;
-    scene.add(wplane);
+    // 정규화
+    let mn=Infinity,mx=-Infinity;
+    for(let i=0;i<sm.length;i++){if(sm[i]<mn)mn=sm[i];if(sm[i]>mx)mx=sm[i];}
+    const rng=mx-mn||1;
+    for(let i=0;i<sm.length;i++) sm[i]=(sm[i]-mn)/rng;
 
-    geo.computeBoundingBox();
-    setupTouchControls(canvas);
-    goStep(4);
     hideLoading();
-    animate();
-  }, 50);
+    build3D(sm,W,H);
+  },80);
 }
 
-function animate() {
-  requestAnimationFrame(animate);
-  if (renderer && scene && camera) renderer.render(scene, camera);
+function gaussSmooth(data,W,H,r){
+  const out=new Float32Array(data.length);
+  const k=[],sigma=r;
+  let ks=0;
+  for(let ky=-r;ky<=r;ky++) for(let kx=-r;kx<=r;kx++){
+    const v=Math.exp(-(kx*kx+ky*ky)/(2*sigma*sigma));
+    k.push({kx,ky,v}); ks+=v;
+  }
+  k.forEach(e=>e.v/=ks);
+  for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+    let s=0;
+    for(const {kx,ky,v} of k){
+      const nx=Math.min(W-1,Math.max(0,x+kx)),ny=Math.min(H-1,Math.max(0,y+ky));
+      s+=data[ny*W+nx]*v;
+    }
+    out[y*W+x]=s;
+  }
+  return out;
 }
 
-// ── 터치/마우스 컨트롤 ──
-function setupTouchControls(el) {
-  el.addEventListener('mousedown', e=>{ isDragging=true; prevX=e.clientX; prevY=e.clientY; });
-  window.addEventListener('mouseup', ()=>isDragging=false);
-  window.addEventListener('mousemove', e=>{
-    if (!isDragging) return;
-    rotateTerrain(e.clientX-prevX, e.clientY-prevY);
-    prevX=e.clientX; prevY=e.clientY;
-  });
-  el.addEventListener('touchstart', e=>{ e.preventDefault();
-    if (e.touches.length===1){ isDragging=true; prevX=e.touches[0].clientX; prevY=e.touches[0].clientY; }
-    else if (e.touches.length===2){ pinchDist=getPinch(e); }
+function build3D(hm,W,H){
+  const canvas=document.getElementById('three-canvas');
+  canvas.width=canvas.clientWidth; canvas.height=canvas.clientHeight;
+  if(threeRenderer){threeRenderer.dispose();}
+  threeRenderer=new THREE.WebGLRenderer({canvas,antialias:true});
+  threeRenderer.setSize(canvas.clientWidth,canvas.clientHeight);
+  threeRenderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  threeRenderer.setClearColor(0x060f1e);
+  threeScene=new THREE.Scene();
+  threeCamera=new THREE.PerspectiveCamera(50,canvas.clientWidth/canvas.clientHeight,0.1,1000);
+  threeCamera.position.set(0,2.8,3.5);
+  threeCamera.lookAt(0,0,0);
+
+  threeScene.add(new THREE.AmbientLight(0x88aacc,0.6));
+  const dl=new THREE.DirectionalLight(0xffffff,1.2); dl.position.set(2,5,3); threeScene.add(dl);
+  const dl2=new THREE.DirectionalLight(0x4488ff,0.4); dl2.position.set(-3,2,-2); threeScene.add(dl2);
+
+  const geo=new THREE.PlaneGeometry(4,4,W-1,H-1);
+  const pos=geo.attributes.position;
+  for(let i=0;i<pos.count;i++) pos.setZ(i,(hm[i]||0)*1.8);
+  pos.needsUpdate=true; geo.computeVertexNormals();
+
+  const cols=new Float32Array(pos.count*3);
+  for(let i=0;i<pos.count;i++){
+    const h=hm[i]||0;
+    let r,g,b;
+    if(h<0.05){r=0.05;g=0.15;b=0.45}
+    else if(h<0.12){r=0.76;g=0.70;b=0.50}
+    else if(h<0.35){r=0.25;g=0.62;b=0.22}
+    else if(h<0.60){r=0.18;g=0.45;b=0.15}
+    else if(h<0.80){r=0.50;g=0.38;b=0.25}
+    else{r=0.95;g=0.95;b=1.00}
+    cols[i*3]=r;cols[i*3+1]=g;cols[i*3+2]=b;
+  }
+  geo.setAttribute('color',new THREE.BufferAttribute(cols,3));
+  const mat=new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide});
+  terrainMesh=new THREE.Mesh(geo,mat);
+  terrainMesh.rotation.x=-Math.PI/2;
+  threeScene.add(terrainMesh);
+  const wmat=new THREE.MeshBasicMaterial({color:0x2a5580,wireframe:true,transparent:true,opacity:0.12});
+  threeScene.add(new THREE.Mesh(geo,wmat));
+
+  setupControls(canvas);
+  (function animate(){requestAnimationFrame(animate);threeRenderer.render(threeScene,threeCamera);})();
+}
+
+function resetView(){
+  if(!threeCamera)return;
+  threeCamera.position.set(0,2.8,3.5); threeCamera.lookAt(0,0,0);
+  if(terrainMesh)terrainMesh.rotation.y=0;
+}
+
+function setupControls(canvas){
+  let drag=false,lx=0,ly=0;
+  canvas.addEventListener('touchstart',e=>{
+    e.preventDefault();
+    if(e.touches.length===1){drag=true;lx=e.touches[0].clientX;ly=e.touches[0].clientY;}
+    if(e.touches.length===2)lastPinchDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
   },{passive:false});
-  el.addEventListener('touchend', ()=>isDragging=false);
-  el.addEventListener('touchmove', e=>{ e.preventDefault();
-    if (e.touches.length===1 && isDragging){
-      rotateTerrain(e.touches[0].clientX-prevX, e.touches[0].clientY-prevY);
-      prevX=e.touches[0].clientX; prevY=e.touches[0].clientY;
-    } else if (e.touches.length===2){
-      const d=getPinch(e), diff=d-pinchDist;
-      camera.position.multiplyScalar(1 - diff*0.008);
-      camera.position.clampLength(20,150);
-      pinchDist=d;
+  canvas.addEventListener('touchmove',e=>{
+    e.preventDefault();
+    if(e.touches.length===1&&drag&&terrainMesh){
+      terrainMesh.rotation.y+=(e.touches[0].clientX-lx)*0.01;
+      threeCamera.position.y=Math.max(0.5,Math.min(5,threeCamera.position.y+(e.touches[0].clientY-ly)*-0.005));
+      lx=e.touches[0].clientX;ly=e.touches[0].clientY;
+    }
+    if(e.touches.length===2){
+      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      threeCamera.position.z=Math.max(1.5,Math.min(8,threeCamera.position.z*lastPinchDist/d));
+      lastPinchDist=d;
     }
   },{passive:false});
+  canvas.addEventListener('touchend',()=>drag=false);
+  canvas.addEventListener('mousedown',e=>{drag=true;lx=e.clientX;ly=e.clientY;});
+  canvas.addEventListener('mousemove',e=>{if(!drag||!terrainMesh)return;terrainMesh.rotation.y+=(e.clientX-lx)*0.008;lx=e.clientX;});
+  canvas.addEventListener('mouseup',()=>drag=false);
+  canvas.addEventListener('wheel',e=>{threeCamera.position.z=Math.max(1.5,Math.min(8,threeCamera.position.z+e.deltaY*0.005));});
 }
 
-function rotateTerrain(dx, dy) {
-  if (!terrain) return;
-  terrain.rotation.y += dx * 0.01;
-  terrain.rotation.x += dy * 0.01;
-  terrain.rotation.x = Math.max(-Math.PI/3, Math.min(Math.PI/3, terrain.rotation.x));
-}
-
-function getPinch(e) {
-  const dx=e.touches[0].clientX-e.touches[1].clientX;
-  const dy=e.touches[0].clientY-e.touches[1].clientY;
-  return Math.sqrt(dx*dx+dy*dy);
-}
-
-function resetView() {
-  if (terrain) { terrain.rotation.set(0,0,0); }
-  if (camera)  { camera.position.set(0,45,70); camera.lookAt(0,0,0); }
-}
-
-// ── 유틸 ──
-function showLoading(msg) {
-  document.getElementById('loading-text').textContent = msg||'처리 중...';
-  document.getElementById('loading').classList.add('show');
-}
-function hideLoading() { document.getElementById('loading').classList.remove('show'); }
-function toggleHelp() { document.getElementById('help-overlay').classList.toggle('show'); }
-
-window.addEventListener('resize', ()=>{
-  resizeOverlay();
-  if (renderer && camera) {
-    const c = document.getElementById('three-canvas');
-    const W = c.parentElement.clientWidth, H = c.parentElement.clientHeight;
-    renderer.setSize(W,H);
-    camera.aspect = W/H;
-    camera.updateProjectionMatrix();
-  }
-});
+function showLoading(msg){document.getElementById('loading-text').textContent=msg;document.getElementById('loading-overlay').classList.add('show');}
+function hideLoading(){document.getElementById('loading-overlay').classList.remove('show');}
+function showError(msg){document.getElementById('error-text').innerHTML=msg;document.getElementById('error-msg').classList.add('show');}
+function hideError(){document.getElementById('error-msg').classList.remove('show');}
+function toggleHelp(){document.getElementById('help-overlay').classList.toggle('show');}
 </script>
 </body>
 </html>
